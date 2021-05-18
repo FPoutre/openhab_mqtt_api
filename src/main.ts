@@ -24,8 +24,8 @@ function getItem(itemName: string) {
             (res: any) => {
                     console.log('Response ended: ');
                     console.log(res.data);
-                    console.log(itemName + ' => ' + res.data);
-                    mqttClient.publish(itemName, res.data);
+                    console.log(itemName + ' => ' + JSON.stringify(res.data));
+                    mqttClient.publish(itemName, JSON.stringify(res.data));
             }
         ).catch((error: any) => {
             console.log(error);
@@ -46,7 +46,7 @@ mqttClient.on('connect', () => {
 mqttClient.on('message', (rawTopic : any, rawMsg : any) => {
     let topic: string = rawTopic.toString();
     let msg: string = rawMsg.toString();
-    console.log(topic, ' <= ', msg);
+    console.log(topic + ' <= ' + msg);
 
     if (msg == "GET") {
         getItem(topic);
