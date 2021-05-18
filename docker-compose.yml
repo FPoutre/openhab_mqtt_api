@@ -1,21 +1,24 @@
-version: '3'
+version: '3.8'
 
 services:
 
     openhab:
         image: openhab/openhab
         container_name: openhab
+        build:
+            network: host
   
     mosquitto:
         image: eclipse-mosquitto
         container_name: mosquitto
+        build:
+            network: host
   
     openhab-mqtt-api:
         image: openhab-mqtt-api
         container_name: openhab-mqtt-api
+        build:
+            network: host
         depends_on:
             - openhab
             - mosquitto
-
-build: 
-    network: host
