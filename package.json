@@ -1,0 +1,10 @@
+{
+  "devDependencies": {
+    "@types/node": "^15.3.0",
+    "typescript": "^4.2.4"
+  },
+  "dependencies": {
+    "mqtt": "^4.2.6",
+    "requests": "^0.3.0"
+  }
+}
