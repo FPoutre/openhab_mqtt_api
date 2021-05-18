@@ -17,9 +17,7 @@ function getAllItems() {
             });
             
             res.on('end', () => {
-                console.log('Response ended: ');
                 let json = JSON.parse(Buffer.concat(data).toString());
-                console.log(json);
                 allItems = json;
             });
         }
@@ -46,7 +44,6 @@ function getItem(itemName: string) {
 }
 
 getAllItems();
-getItem('zWaveWallPlug4_Switch');
 
 mqttClient.on('connect', () => {
     console.log('Connected to MQTT broker.');
@@ -64,3 +61,13 @@ mqttClient.on('message', (rawTopic : any, rawMsg : any) => {
         getItem(topic);
     }
 });
+
+setInterval(
+    () => {
+        getAllItems();
+        allItems.forEach((item : any) => {
+            mqttClient.subscribe(item.name);
+        });
+    },
+    10000
+);
