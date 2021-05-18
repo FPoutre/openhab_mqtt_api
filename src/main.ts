@@ -4,8 +4,17 @@ const mqtt = require('mqtt');
 const mqttClient = mqtt.connect('mqtt://localhost:1883');
 
 
+/**
+ * Subscribes to all the MQTT topics associated with all the items OpenHAB returns.
+ */
 function getAllItems() {
-    axios.get('http://localhost:8080/rest/items')
+    axios.get(
+            'http://localhost:8080/rest/items',
+            {
+                headers: {
+                    'Accept': 'application/json'
+                }
+            })
         .then(
             (res: any) => {
                 res.data.forEach((item: any) => {
@@ -18,22 +27,45 @@ function getAllItems() {
         });
 }
 
+/**
+ * Gets an item's data from OpenHAB's REST API.
+ * @param itemName The name of the item to get from OpenHAB's REST API
+ */
 function getItem(itemName: string) {
-    axios.get('http://localhost:8080/rest/items/' + itemName)
+    axios.get(
+            'http://localhost:8080/rest/items/' + itemName,
+            {
+                headers: {
+                    'Accept': 'application/json'
+                }
+            })
         .then(
             (res: any) => {
                     console.log('Response ended: ');
                     console.log(res.data);
                     console.log(itemName + ' => ' + JSON.stringify(res.data));
-                    mqttClient.publish(itemName, JSON.stringify(res.data));
+                    mqttClient.publish(itemName + '/response', JSON.stringify(res.data));
             }
         ).catch((error: any) => {
             console.log(error);
         });
 }
 
+/**
+ * Sets the state of an item from OpenHAB's REST API.
+ * @param itemName The name of the item to get from OpenHAB's REST API
+ * @param message The new value that should be passed to OpenHAB's REST API
+ */
 function setItem(itemName: string, message: string) {
-    axios.post('http://localhost:8080/rest/items/' + itemName, message)
+    axios.post(
+            'http://localhost:8080/rest/items/' + itemName,
+            message,
+            {
+                headers: {
+                    'Content-Type': 'text/plain',
+                    'Accept': 'application/json'
+                }
+            })
         .catch((error: any) => {
             console.log(error);
         });
@@ -41,6 +73,7 @@ function setItem(itemName: string, message: string) {
 
 mqttClient.on('connect', () => {
     console.log('Connected to MQTT broker.');
+    getAllItems();
 });
 
 mqttClient.on('message', (rawTopic : any, rawMsg : any) => {
@@ -48,6 +81,7 @@ mqttClient.on('message', (rawTopic : any, rawMsg : any) => {
     let msg: string = rawMsg.toString();
     console.log(topic + ' <= ' + msg);
 
+    // Checks if either the MQTT Client wishes to get the item's data, or wishes to change the item's state.
     if (msg == "GET") {
         getItem(topic);
     } else {
@@ -55,9 +89,13 @@ mqttClient.on('message', (rawTopic : any, rawMsg : any) => {
     }
 });
 
+/**
+ * This checks every minute if any new item has been added to OpenHAB.
+ * If so, it subscribes to the new concerned topics.
+ */
 setInterval(
     () => {
         if (mqttClient) getAllItems();
     },
-    10000
+    60000
 );
