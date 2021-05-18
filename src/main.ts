@@ -8,7 +8,8 @@ function getAllItems() {
     axios.get('http://localhost:8080/rest/items')
         .then(
             (res: any) => {
-                res.forEach((item: any) => {
+                let payload: any = JSON.parse(res);
+                payload.forEach((item: any) => {
                     mqttClient.subscribe(item.name);
                 });
             }
