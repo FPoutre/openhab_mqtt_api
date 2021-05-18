@@ -1,0 +1,17 @@
+version: 1
+
+services:
+
+    openhab:
+      image: openhab/openhab
+  
+    mosquitto:
+      image: eclipse-mosquitto
+  
+    mqtt-api:
+      image: openhab-mqtt-api
+      depends_on:
+        - mosquitto
+
+build: 
+    network: host
