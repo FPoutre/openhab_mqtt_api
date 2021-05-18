@@ -1,9 +1,9 @@
 FROM node:latest
 
-WORKDIR /root
-COPY bin/main.js /root/main.js
-COPY package.json /root/package.json
-COPY package-lock.json /root/package-lock.json
-RUN npm install
+WORKDIR /opt/openhab-mqtt-api
+COPY bin/main.js /opt/openhab-mqtt-api/main.js
+COPY package.json /opt/openhab-mqtt-api/package.json
+COPY package-lock.json /opt/openhab-mqtt-api/package-lock.json
 
+RUN npm install
 CMD node main.js
