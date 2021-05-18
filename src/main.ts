@@ -22,7 +22,10 @@ function getAllItems() {
                     });
                 });
             }
-        );
+        )
+        .catch((error: any) => {
+            console.log(error);
+        });
 }
 
 function getItem(itemName: string) {
@@ -43,11 +46,16 @@ function getItem(itemName: string) {
                     mqttClient.publish(itemName, json);
                 });
             }
-        );
+        ).catch((error: any) => {
+            console.log(error);
+        });
 }
 
 function setItem(itemName: string, message: string) {
-    axios.post('http://localhost:8080/rest/items/' + itemName, message);
+    axios.post('http://localhost:8080/rest/items/' + itemName, message)
+        .catch((error: any) => {
+            console.log(error);
+        });
 }
 
 mqttClient.on('connect', () => {
