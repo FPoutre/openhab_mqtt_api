@@ -6,6 +6,18 @@ services:
         image: openhab/openhab 
         container_name: openhab
         network_mode: host
+        volumes: 
+            - "/etc/localtime:/etc/localtime:ro"
+            - "/etc/timezone:/etc/timezone:ro"
+            - "/opt/openhab/conf:/openhab/conf"
+            - "/opt/openhab/userdata:/openhab/userdata"
+            - "/opt/openhab/addons:/openhab/addons"
+        devices: 
+            - "/dev/ttyACM0"
+        environment: 
+            USER_ID: 999
+            GROUP_ID: 995
+            CRYPTO_POLICY: 'unlimited'
   
     mosquitto:
         image: eclipse-mosquitto 
