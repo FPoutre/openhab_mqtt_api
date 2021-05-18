@@ -8,18 +8,8 @@ function getAllItems() {
     axios.get('http://localhost:8080/rest/items')
         .then(
             (res: any) => {
-                let data: any[] = [];
-
-                res.on('data', (chunk: any) => {
-                    data.push(chunk);
-                });
-                
-                res.on('end', () => {
-                    let allItems: any = JSON.parse(Buffer.concat(data).toString());
-
-                    allItems.forEach((item: any) => {
-                        mqttClient.subscribe(item.name);
-                    });
+                res.forEach((item: any) => {
+                    mqttClient.subscribe(item.name);
                 });
             }
         )
@@ -32,19 +22,10 @@ function getItem(itemName: string) {
     axios.get('http://localhost:8080/rest/items/' + itemName)
         .then(
             (res: any) => {
-                let data: any[] = [];
-
-                res.on('data', (chunk: any) => {
-                    data.push(chunk);
-                });
-                
-                res.on('end', () => {
                     console.log('Response ended: ');
-                    let json: any = JSON.parse(Buffer.concat(data).toString());
-                    console.log(json);
-                    console.log(itemName + ' => ' + json);
-                    mqttClient.publish(itemName, json);
-                });
+                    console.log(res);
+                    console.log(itemName + ' => ' + res);
+                    mqttClient.publish(itemName, res);
             }
         ).catch((error: any) => {
             console.log(error);
