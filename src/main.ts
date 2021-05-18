@@ -20,4 +20,4 @@ function getItem(itemName: string) {
     );
 }
 
-getItem('zWaveWallPlug4');
+getItem('zWaveWallPlug4_Switch');
