@@ -5,22 +5,17 @@ services:
     openhab:
         image: openhab/openhab 
         container_name: openhab
-        build:
-            network: host
+        network_mode: host
   
     mosquitto:
         image: eclipse-mosquitto 
         container_name: mosquitto
-        build:
-            network: host
+        network_mode: host
   
     openhab-mqtt-api:
         image: openhab-mqtt-api 
         container_name: openhab-mqtt-api
-        build:
-            context: .
-            dockerfile: Dockerfile
-            network: host
+        network_mode: host
         depends_on:
             - openhab
             - mosquitto
