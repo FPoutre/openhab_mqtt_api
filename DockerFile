@@ -1,6 +1,0 @@
-FROM node:latest
-COPY bin/main.js main.js
-COPY package.json package.json
-COPY package-lock.json package-lock.json
-RUN npm install
-CMD node main.js
