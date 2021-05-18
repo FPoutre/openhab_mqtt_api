@@ -3,15 +3,19 @@ version: 1
 services:
 
     openhab:
-      image: openhab/openhab
+        image: openhab/openhab
+        container_name: openhab
   
     mosquitto:
-      image: eclipse-mosquitto
+        image: eclipse-mosquitto
+        container_name: mosquitto
   
-    mqtt-api:
-      image: openhab-mqtt-api
-      depends_on:
-        - mosquitto
+    openhab-mqtt-api:
+        image: openhab-mqtt-api
+        container_name: openhab-mqtt-api
+        depends_on:
+            - openhab
+            - mosquitto
 
 build: 
     network: host
