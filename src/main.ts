@@ -8,9 +8,7 @@ function getAllItems() {
     axios.get('http://localhost:8080/rest/items')
         .then(
             (res: any) => {
-                console.log(res);
-                let payload: any = JSON.parse(res);
-                payload.forEach((item: any) => {
+                res.data.forEach((item: any) => {
                     mqttClient.subscribe(item.name);
                 });
             }
@@ -25,9 +23,9 @@ function getItem(itemName: string) {
         .then(
             (res: any) => {
                     console.log('Response ended: ');
-                    console.log(res);
-                    console.log(itemName + ' => ' + res);
-                    mqttClient.publish(itemName, res);
+                    console.log(res.data);
+                    console.log(itemName + ' => ' + res.data);
+                    mqttClient.publish(itemName, res.data);
             }
         ).catch((error: any) => {
             console.log(error);
