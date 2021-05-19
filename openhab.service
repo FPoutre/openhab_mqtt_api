@@ -1,0 +1,17 @@
+[Unit]
+Description=openHAB
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+User=openhab
+Group=openhab
+WorkingDirectory=/opt/openhab_mqtt_api
+ExecStart=/bin/docker-compose up -d --force-recreate
+ExecStop=/bin/docker-compose down
+RemainAfterExit=true
+
+[Install]
+WantedBy=multi-user.target
+
