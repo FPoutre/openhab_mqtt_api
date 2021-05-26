@@ -91,8 +91,13 @@ function subscribeToSSE() {
         if (topicSplit[3] == 'state' && mqttClient) {
             let payload: any = JSON.parse(msg.payload);
             let nameSplit: string[] = topicSplit[2].split('_');
+
+            console.log('Received event :');
+            console.log(topic);
+            console.log(payload);
     
             if (nameSplit.length == 1) {
+                console.log(nameSplit[0] + ' => ' + payload.value);
                 mqttClient.publish(nameSplit[0], payload.value);
             } else {
                 let name: string = nameSplit[0] + '/';
@@ -100,6 +105,7 @@ function subscribeToSSE() {
                     name += nameSplit[i] + '_';
                 }
                 name += nameSplit[nameSplit.length - 1];
+                console.log(name + ' => ' + payload.value);
                 mqttClient.publish(name, payload.value);
             }
         }
