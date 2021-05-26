@@ -1,6 +1,6 @@
 const axios = require('axios');
 const mqtt = require('mqtt');
-const eventsource = require('eventsource');
+const EventSource = require('@joeybaker/eventsource');
 
 const mqttClient = mqtt.connect('mqtt://localhost:1883');
 
