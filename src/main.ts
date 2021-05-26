@@ -2,7 +2,10 @@ const axios = require('axios');
 const mqtt = require('mqtt');
 var EventSource = require('eventsource');
 
-const mqttClient = mqtt.connect('mqtt://localhost:1883');
+const hostIP: string = '192.168.1.22';
+const mqttClient = mqtt.connect('mqtt://' + hostIP + ':1883');
+let es: any = new EventSource('http://' + hostIP + ':8080/rest/events?topics=openhab/items');
+subscribeToSSE();
 
 
 /**
@@ -10,7 +13,7 @@ const mqttClient = mqtt.connect('mqtt://localhost:1883');
  */
 function getAllItems() {
     axios.get(
-            'http://localhost:8080/rest/items',
+            'http://' + hostIP + ':8080/rest/items',
             {
                 headers: {
                     'Accept': 'application/json'
@@ -34,7 +37,7 @@ function getAllItems() {
  */
 function getItem(itemName: string) {
     axios.get(
-            'http://localhost:8080/rest/items/' + itemName,
+            'http://' + hostIP + ':8080/rest/items/' + itemName,
             {
                 headers: {
                     'Accept': 'application/json'
@@ -59,7 +62,7 @@ function getItem(itemName: string) {
  */
 function setItem(itemName: string, message: string) {
     axios.post(
-            'http://localhost:8080/rest/items/' + itemName,
+            'http://' + hostIP + ':8080/rest/items/' + itemName,
             message,
             {
                 headers: {
@@ -70,6 +73,37 @@ function setItem(itemName: string, message: string) {
         .catch((error: any) => {
             console.log(error);
         });
+}
+
+function subscribeToSSE() {
+    es = new EventSource('http://' + hostIP + ':8080/rest/events?topics=openhab/items');
+
+    es.onopen = (event: any) => {
+        console.log('Successfully subscribed to OpenHAB\'s SSE.');
+    }
+    
+    es.onmessage = (msg: any) => {
+        msg = JSON.parse(msg.data);
+    
+        let topic: string = msg.topic.toString();
+        let topicSplit: string[] = topic.split('/');
+    
+        if (topicSplit[3] == 'state' && mqttClient) {
+            let payload: any = JSON.parse(msg.payload);
+            let nameSplit: string[] = topicSplit[2].split('_');
+    
+            if (nameSplit.length == 1) {
+                mqttClient.publish(nameSplit[0], payload.value);
+            } else {
+                let name: string = nameSplit[0] + '/';
+                for (let i = 1; i < nameSplit.length - 1; i++) {
+                    name += nameSplit[i] + '_';
+                }
+                name += nameSplit[nameSplit.length - 1];
+                mqttClient.publish(name, payload.value);
+            }
+        }
+    }
 }
 
 mqttClient.on('connect', () => {
@@ -90,31 +124,6 @@ mqttClient.on('message', (rawTopic : any, rawMsg : any) => {
     }
 });
 
-let es: any = new EventSource('http://localhost:8080/rest/events?topics=openhab/items');
-
-es.onmessage = (msg: any) => {
-    msg = JSON.parse(msg.data);
-
-    let topic: string = msg.topic.toString();
-    let topicSplit: string[] = topic.split('/');
-
-    if (topicSplit[3] == 'state' && mqttClient) {
-        let payload: any = JSON.parse(msg.payload);
-        let nameSplit: string[] = topicSplit[2].split('_');
-
-        if (nameSplit.length == 1) {
-            mqttClient.publish(nameSplit[0], payload.value);
-        } else {
-            let name: string = nameSplit[0] + '/';
-            for (let i = 1; i < nameSplit.length - 1; i++) {
-                name += nameSplit[i] + '_';
-            }
-            name += nameSplit[nameSplit.length - 1];
-            mqttClient.publish(name, payload.value);
-        }
-    }
-}
-
 /**
  * This checks every minute if any new item has been added to OpenHAB.
  * If so, it subscribes to the new concerned topics.
@@ -122,6 +131,7 @@ es.onmessage = (msg: any) => {
 setInterval(
     () => {
         if (mqttClient) getAllItems();
+        if (es.readyState == 0 || es.readyState == 2) subscribeToSSE();
     },
     60000
 );
