@@ -5,6 +5,7 @@
   },
   "dependencies": {
     "axios": "^0.21.1",
+    "eventsource": "^1.1.0",
     "mqtt": "^4.2.6",
     "requests": "^0.3.0"
   }

@@ -1,5 +1,6 @@
 const axios = require('axios');
 const mqtt = require('mqtt');
+const eventsource = require('eventsource');
 
 const mqttClient = mqtt.connect('mqtt://localhost:1883');
 
@@ -88,6 +89,13 @@ mqttClient.on('message', (rawTopic : any, rawMsg : any) => {
         setItem(topic, msg);
     }
 });
+
+let es: any = new EventSource('http://localhost:8080/rest/events?topics=openhab/items');
+
+es.onmessage = (msg: any) => {
+    msg = JSON.parse(msg.data);
+    console.log(msg);
+}
 
 /**
  * This checks every minute if any new item has been added to OpenHAB.

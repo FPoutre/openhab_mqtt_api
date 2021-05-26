@@ -28,14 +28,12 @@ services:
         ports:
             - 1883:1883
             - 9001:9001
-        network_mode: host
         restart: unless-stopped
   
     openhab-mqtt:
         image: openhab-mqtt:latest
         container_name: openhab-mqtt
         hostname: openhab-mqtt
-        network_mode: host
         restart: unless-stopped
         depends_on:
             - openhab
