@@ -1,6 +1,6 @@
 const axios = require('axios');
 const mqtt = require('mqtt');
-const EventSource = require('@joeybaker/eventsource');
+var EventSource = require('eventsource');
 
 const mqttClient = mqtt.connect('mqtt://localhost:1883');
 
@@ -94,7 +94,25 @@ let es: any = new EventSource('http://localhost:8080/rest/events?topics=openhab/
 
 es.onmessage = (msg: any) => {
     msg = JSON.parse(msg.data);
-    console.log(msg);
+
+    let topic: string = msg.topic.toString();
+    let topicSplit: string[] = topic.split('/');
+
+    if (topicSplit[3] == 'state' && mqttClient) {
+        let payload: any = JSON.parse(msg.payload);
+        let nameSplit: string[] = topicSplit[2].split('_');
+
+        if (nameSplit.length == 1) {
+            mqttClient.publish(nameSplit[0], payload.value);
+        } else {
+            let name: string = nameSplit[0] + '/';
+            for (let i = 1; i < nameSplit.length - 1; i++) {
+                name += nameSplit[i] + '_';
+            }
+            name += nameSplit[nameSplit.length - 1];
+            mqttClient.publish(name, payload.value);
+        }
+    }
 }
 
 /**
