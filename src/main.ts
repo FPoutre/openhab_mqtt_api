@@ -17,7 +17,7 @@ subscribeToSSE();
  */
 function topicToName(topic: string) {
     // Gets to this format : item/channel
-    let name: string = topic.slice(topic.indexOf('/'), topic.length - 1);
+    let name: string = topic.slice(topic.indexOf('/') + 1, topic.length);
     // Returns : item_channel
     return name.replace('/', '_');
 }
