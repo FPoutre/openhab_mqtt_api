@@ -158,12 +158,13 @@ mqttClient.on('message', (rawTopic : any, rawMsg : any) => {
     let topic: string = rawTopic.toString();
     let type: string = topic.slice(0, topic.indexOf('/'));
     let msg: string = rawMsg.toString();
-    console.log(rawTopic.toString() + ' <= ' + msg);
 
     // Checks if either the MQTT Client wishes to get the item's data, or wishes to change the item's state.
     if (type == 'sensors' && msg == 'GET') {
+        console.log(rawTopic.toString() + ' <= ' + msg);
         getItem(topicToName(topic));
     } else if (type == 'actuators') {
+        console.log(rawTopic.toString() + ' <= ' + msg);
         setItem(topicToName(topic), msg);
     }
 });
