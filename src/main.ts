@@ -9,6 +9,35 @@ subscribeToSSE();
 
 
 /**
+ * Converts a MQTT topic to an OpenHAB's Item's name.
+ * MQTT topics are formatted this way : type/item/channel
+ * OpenHAB's Items' names are formatted this way : item_channel
+ * @param topic The topic to be converted to an Item's name
+ * @returns The converted Item's name
+ */
+function topicToName(topic: string) {
+    // Gets to this format : item/channel
+    let name: string = topic.slice(topic.indexOf('/'), topic.length - 1);
+    // Returns : item_channel
+    return name.replace('/', '_');
+}
+
+/**
+ * Converts an OpenHAB's Item's name to a MQTT topic.
+ * MQTT topics are formatted this way : sensors/item/channel
+ * OpenHAB's Items' names are formatted this way : item_channel
+ * @param type The type of item. Either a sensor or an actuator
+ * @param name The OpenHAB's item name to be converted to an MQTT topic
+ * @returns The converted MQTT topic
+ */
+function nameToTopic(type: string, name: string) {
+    // Formats to : item/channel
+    let topic: string = name.replace('_', '/');
+    // Returns : type/item/channel
+    return type + '/' + topic;
+}
+
+/**
  * Subscribes to all the MQTT topics associated with all the items OpenHAB returns.
  */
 function getAllItems() {
@@ -22,7 +51,14 @@ function getAllItems() {
         .then(
             (res: any) => {
                 res.data.forEach((item: any) => {
-                    mqttClient.subscribe(item.name.replace('_', '/'));
+                    if ('readOnly' in item && item.readOnly) {
+                        mqttClient.subscribe(nameToTopic('sensors', item.name));
+                    } else if ('writeOnly' in item && item.writeOnly) {
+                        mqttClient.subscribe(nameToTopic('actuators', item.name));
+                    } else {
+                        mqttClient.subscribe(nameToTopic('sensors', item.name));
+                        mqttClient.subscribe(nameToTopic('actuators', item.name));
+                    }
                 });
                 console.log('Successfully updated MQTT topic subscriptions.');
             }
@@ -37,9 +73,9 @@ function getAllItems() {
  * Gets an item's data from OpenHAB's REST API.
  * @param itemName The name of the item to get from OpenHAB's REST API
  */
-function getItem(topic: string) {
+function getItem(name: string) {
     axios.get(
-            'http://' + hostIP + ':8080/rest/items/' + topic.replace('/', '_'),
+            'http://' + hostIP + ':8080/rest/items/' + name,
             {
                 headers: {
                     'Accept': 'application/json'
@@ -49,8 +85,8 @@ function getItem(topic: string) {
             (res: any) => {
                 console.log('Response ended: ');
                 console.log(res.data);
-                console.log(topic + ' => ' + JSON.stringify(res.data));
-                mqttClient.publish(topic + '/response', JSON.stringify(res.data));
+                console.log(nameToTopic('sensors', name) + ' => ' + JSON.stringify(res.data));
+                mqttClient.publish(nameToTopic('sensors', name), JSON.stringify(res.data));
             }
         ).catch((error: any) => {
             console.log(error);
@@ -62,9 +98,9 @@ function getItem(topic: string) {
  * @param itemName The name of the item to get from OpenHAB's REST API
  * @param message The new value that should be passed to OpenHAB's REST API
  */
-function setItem(topic: string, message: string) {
+function setItem(name: string, message: string) {
     axios.post(
-            'http://' + hostIP + ':8080/rest/items/' + topic.replace('/', '_'),
+            'http://' + hostIP + ':8080/rest/items/' + name,
             message,
             {
                 headers: {
@@ -96,19 +132,19 @@ function subscribeToSSE() {
     es.onmessage = (msg: any) => {
         msg = JSON.parse(msg.data);
     
-        let topic: string = msg.topic.toString();
-        let topicSplit: string[] = topic.split('/');
+        let name: string = msg.topic.toString().split('/')[2];
+        let isState: boolean = msg.topic.toString().split('/')[3] == 'state';
     
-        if (topicSplit[3] == 'state' && mqttClient) {
+        if (isState && mqttClient) {
             let payload: any = JSON.parse(msg.payload);
-            let name: string = topicSplit[2].replace('_', '/');
+            let topic: string = nameToTopic('sensors', name);
 
             console.log('Received event :');
-            console.log(topic);
+            console.log(name);
             console.log(payload);
     
-            console.log(name + ' => ' + payload.value);
-            mqttClient.publish(name, payload.value);
+            console.log(topic + ' => ' + payload.value);
+            mqttClient.publish(topic, payload.value);
         }
     }
 }
@@ -120,14 +156,15 @@ mqttClient.on('connect', () => {
 
 mqttClient.on('message', (rawTopic : any, rawMsg : any) => {
     let topic: string = rawTopic.toString();
+    let type: string = topic.slice(0, topic.indexOf('/'));
     let msg: string = rawMsg.toString();
-    console.log(topic + ' <= ' + msg);
+    console.log(rawTopic.toString() + ' <= ' + msg);
 
     // Checks if either the MQTT Client wishes to get the item's data, or wishes to change the item's state.
-    if (msg == "GET") {
-        getItem(topic);
-    } else {
-        setItem(topic, msg);
+    if (type == 'sensors' && msg == 'GET') {
+        getItem(topicToName(topic));
+    } else if (type == 'actuators') {
+        setItem(topicToName(topic), msg);
     }
 });
 
