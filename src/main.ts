@@ -22,11 +22,13 @@ function getAllItems() {
         .then(
             (res: any) => {
                 res.data.forEach((item: any) => {
-                    mqttClient.subscribe(item.name);
+                    mqttClient.subscribe(item.name.replace('_', '/'));
                 });
+                console.log('Successfully updated MQTT topic subscriptions.');
             }
         )
         .catch((error: any) => {
+            console.log('An error occurred during MQTT subscriptions\' update :');
             console.log(error);
         });
 }
@@ -35,9 +37,9 @@ function getAllItems() {
  * Gets an item's data from OpenHAB's REST API.
  * @param itemName The name of the item to get from OpenHAB's REST API
  */
-function getItem(itemName: string) {
+function getItem(topic: string) {
     axios.get(
-            'http://' + hostIP + ':8080/rest/items/' + itemName,
+            'http://' + hostIP + ':8080/rest/items/' + topic.replace('/', '_'),
             {
                 headers: {
                     'Accept': 'application/json'
@@ -45,10 +47,10 @@ function getItem(itemName: string) {
             })
         .then(
             (res: any) => {
-                    console.log('Response ended: ');
-                    console.log(res.data);
-                    console.log(itemName + ' => ' + JSON.stringify(res.data));
-                    mqttClient.publish(itemName + '/response', JSON.stringify(res.data));
+                console.log('Response ended: ');
+                console.log(res.data);
+                console.log(topic + ' => ' + JSON.stringify(res.data));
+                mqttClient.publish(topic + '/response', JSON.stringify(res.data));
             }
         ).catch((error: any) => {
             console.log(error);
@@ -60,9 +62,9 @@ function getItem(itemName: string) {
  * @param itemName The name of the item to get from OpenHAB's REST API
  * @param message The new value that should be passed to OpenHAB's REST API
  */
-function setItem(itemName: string, message: string) {
+function setItem(topic: string, message: string) {
     axios.post(
-            'http://' + hostIP + ':8080/rest/items/' + itemName,
+            'http://' + hostIP + ':8080/rest/items/' + topic.replace('/', '_'),
             message,
             {
                 headers: {
@@ -70,6 +72,11 @@ function setItem(itemName: string, message: string) {
                     'Accept': 'application/json'
                 }
             })
+        .then(
+            (res: any) => {
+                console.log('Item set successfully.');
+            }
+        )
         .catch((error: any) => {
             console.log(error);
         });
@@ -90,24 +97,14 @@ function subscribeToSSE() {
     
         if (topicSplit[3] == 'state' && mqttClient) {
             let payload: any = JSON.parse(msg.payload);
-            let nameSplit: string[] = topicSplit[2].split('_');
+            let name: string = topicSplit[2].replace('_', '/');
 
             console.log('Received event :');
             console.log(topic);
             console.log(payload);
     
-            if (nameSplit.length == 1) {
-                console.log(nameSplit[0] + ' => ' + payload.value);
-                mqttClient.publish(nameSplit[0], payload.value);
-            } else {
-                let name: string = nameSplit[0] + '/';
-                for (let i = 1; i < nameSplit.length - 1; i++) {
-                    name += nameSplit[i] + '_';
-                }
-                name += nameSplit[nameSplit.length - 1];
-                console.log(name + ' => ' + payload.value);
-                mqttClient.publish(name, payload.value);
-            }
+            console.log(name + ' => ' + payload.value);
+            mqttClient.publish(name, payload.value);
         }
     }
 }
@@ -136,8 +133,14 @@ mqttClient.on('message', (rawTopic : any, rawMsg : any) => {
  */
 setInterval(
     () => {
-        if (mqttClient) getAllItems();
-        if (es.readyState == 0 || es.readyState == 2) subscribeToSSE();
+        if (mqttClient) {
+            console.log('Refreshing MQTT topic subscriptions...');
+            getAllItems();
+        }
+        if (es.readyState == 0 || es.readyState == 2) {
+            console.log('Connection to OpenHAB\'s SSE lost. Retrying...');
+            subscribeToSSE();
+        }
     },
     60000
 );
