@@ -1,4 +1,4 @@
-FROM node:16.2.0
+FROM node:12.22.1-alpine3.10
 
 WORKDIR /opt/openhab-mqtt-api
 
