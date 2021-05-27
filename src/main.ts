@@ -82,6 +82,10 @@ function setItem(topic: string, message: string) {
         });
 }
 
+/**
+ * Subcribes to OpenHAB's Server-Sent Events through a GET request on /rest/events.
+ * The 'topics' parameter indicates that we're only interested in Items.
+ */
 function subscribeToSSE() {
     es = new EventSource('http://' + hostIP + ':8080/rest/events?topics=openhab/items');
 
@@ -130,6 +134,7 @@ mqttClient.on('message', (rawTopic : any, rawMsg : any) => {
 /**
  * This checks every minute if any new item has been added to OpenHAB.
  * If so, it subscribes to the new concerned topics.
+ * It also checks if the SSE connection is healthy. It will try to reconnect if not.
  */
 setInterval(
     () => {
