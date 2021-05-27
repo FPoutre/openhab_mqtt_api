@@ -85,8 +85,8 @@ function getItem(name: string) {
             (res: any) => {
                 console.log('Response ended: ');
                 console.log(res.data);
-                console.log(nameToTopic('sensors', name) + ' => ' + JSON.stringify(res.data));
-                mqttClient.publish(nameToTopic('sensors', name), JSON.stringify(res.data));
+                console.log(nameToTopic('sensors', name) + ' => ' + res.data.state);
+                mqttClient.publish(nameToTopic('sensors', name), res.data.state);
             }
         ).catch((error: any) => {
             console.log(error);
