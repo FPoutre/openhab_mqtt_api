@@ -76,7 +76,7 @@ function getAllItems() {
  */
 function getItem(name: string) {
     axios.get(
-            'http://' + hostIP + ':8080/rest/items/' + name,
+            'http://' + openhabHostIP + ':8080/rest/items/' + name,
             {
                 headers: {
                     'Accept': 'application/json'
