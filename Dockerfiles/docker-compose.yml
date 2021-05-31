@@ -15,16 +15,15 @@ services:
             - "/opt/openhab/userdata:/openhab/userdata"
             - "/opt/openhab/addons:/openhab/addons"
         environment:
-            USER_ID: 999
-            GROUP_ID: 995
-            CRYPTO_POLICY: 'unlimited'
+            USER_ID: 998
+            GROUP_ID: 997
         network_mode: host
         restart: always
   
-    mosquitto:
+    mqtt_broker:
         image: eclipse-mosquitto:1.6.14
-        container_name: mosquitto
-        hostname: mosquitto
+        container_name: mqtt_broker
+        hostname: mqtt_broker
         ports:
             - 1883:1883
             - 9001:9001
@@ -37,5 +36,5 @@ services:
         restart: unless-stopped
         depends_on:
             - openhab
-            - mosquitto
+            - mqtt_broker
 
