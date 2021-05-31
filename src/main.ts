@@ -1,10 +1,11 @@
 const axios = require('axios');
 const mqtt = require('mqtt');
-var EventSource = require('eventsource');
+const eventSource = require('eventsource');
 
-const hostIP: string = '192.168.1.22';
-const mqttClient = mqtt.connect('mqtt://' + hostIP + ':1883');
-let es: any = new EventSource('http://' + hostIP + ':8080/rest/events?topics=openhab/items');
+const openhabHostIP: string = process.argv[0];
+const mqttHostIP: string = process.argv[1];
+const mqttClient = mqtt.connect('mqtt://' + openhabHostIP + ':1883');
+let es: any = new EventSource('http://' + openhabHostIP + ':8080/rest/events?topics=openhab/items');
 subscribeToSSE();
 
 
@@ -42,7 +43,7 @@ function nameToTopic(type: string, name: string) {
  */
 function getAllItems() {
     axios.get(
-            'http://' + hostIP + ':8080/rest/items',
+            'http://' + openhabHostIP + ':8080/rest/items',
             {
                 headers: {
                     'Accept': 'application/json'
@@ -100,7 +101,7 @@ function getItem(name: string) {
  */
 function setItem(name: string, message: string) {
     axios.post(
-            'http://' + hostIP + ':8080/rest/items/' + name,
+            'http://' + openhabHostIP + ':8080/rest/items/' + name,
             message,
             {
                 headers: {
@@ -123,7 +124,7 @@ function setItem(name: string, message: string) {
  * The 'topics' parameter indicates that we're only interested in Items.
  */
 function subscribeToSSE() {
-    es = new EventSource('http://' + hostIP + ':8080/rest/events?topics=openhab/items');
+    es = new EventSource('http://' + openhabHostIP + ':8080/rest/events?topics=openhab/items');
 
     es.onopen = (event: any) => {
         console.log('Successfully subscribed to OpenHAB\'s SSE.');

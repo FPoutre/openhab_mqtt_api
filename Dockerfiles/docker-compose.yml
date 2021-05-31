@@ -32,6 +32,9 @@ services:
   
     openhab-mqtt:
         image: openhab-mqtt:latest
+        environment:
+            - OPENHAB_HOST_IP = 192.168.1.22
+            - MQTT_HOST_IP = 192.168.1.22
         container_name: openhab-mqtt
         hostname: openhab-mqtt
         restart: unless-stopped
