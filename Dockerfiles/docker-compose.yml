@@ -17,6 +17,7 @@ services:
         environment:
             USER_ID: 998
             GROUP_ID: 997
+            CRYPTO_POLICY: 'unlimited'
         network_mode: host
         restart: always
   
