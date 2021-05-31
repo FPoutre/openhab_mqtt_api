@@ -9,3 +9,6 @@ build:
 
 run:
 	cd Dockerfiles && docker-compose up -d openhab-mqtt
+
+kill:
+	cd Dockerfiles && docker-compose down

@@ -6,5 +6,4 @@ COPY bin/main.js package.json package-lock.json ./
 
 RUN npm install
 
-ENTRYPOINT ["node"]
-CMD ["main.js", "$OPENHAB_HOST_IP", "$MQTT_HOST_IP"]
+ENTRYPOINT node main.js ${OPENHAB_HOST_IP} ${MQTT_HOST_IP}
