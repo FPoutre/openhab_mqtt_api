@@ -21,10 +21,10 @@ services:
         network_mode: host
         restart: always
   
-    mqtt_broker:
+    mqtt-broker:
         image: eclipse-mosquitto:1.6.14
-        container_name: mqtt_broker
-        hostname: mqtt_broker
+        container_name: mqtt-broker
+        hostname: mqtt-broker
         ports:
             - 1883:1883
             - 9001:9001
