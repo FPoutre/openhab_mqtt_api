@@ -40,5 +40,5 @@ services:
         restart: unless-stopped
         depends_on:
             - openhab
-            - mqtt_broker
+            - mqtt-broker
 
